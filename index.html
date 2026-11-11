@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planet Travel Explorer 🌍</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;background:linear-gradient(#bdf0c0,#e9fbd9 60%,#cdf3d4);color:#14502b}
+canvas{position:fixed;inset:0}
+h1{position:fixed;top:10px;left:0;right:0;margin:0;text-align:center;font-size:clamp(1.3rem,4vw,2rem);color:#1f6b3a;text-shadow:0 2px 0 #fff;pointer-events:none}
+#mascot{position:fixed;top:56px;left:12px;display:flex;gap:8px;align-items:flex-end;max-width:72%}
+#mascot .f svg{width:84px;height:84px;display:block}#mascot .f{animation:hop 1.6s ease-in-out infinite}
+#say{background:#fff;border:3px solid #58b868;border-radius:18px 18px 18px 4px;padding:8px 12px;font-weight:700}
+@keyframes hop{50%{transform:translateY(-6px)}}
+#snd{position:fixed;top:10px;right:12px;width:44px;height:44px;border-radius:50%;border:3px solid #3f9b4b;background:#fff;font-size:20px;cursor:pointer;z-index:5}
+#panel{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:680px;box-sizing:border-box;max-height:38vh;overflow:auto;background:#fffff6;border:4px solid #58b868;border-bottom:0;border-radius:26px 26px 0 0;padding:12px 16px 20px;transition:transform .6s}
+#panel.hide{transform:translate(-50%,115%)}
+#crumbs{font-size:.9rem;margin-bottom:8px;min-height:1.3em}
+#crumbs button{all:unset;cursor:pointer;text-decoration:underline;margin-right:6px}
+.opts{display:grid;gap:8px}
+.opts button,.btn{font:inherit;font-weight:700;color:#14502b;background:#86e07f;border:3px solid #3f9b4b;border-radius:16px;box-shadow:0 4px 0 #3f9b4b;padding:10px 14px;text-align:left;cursor:pointer}
+.opts button:active,.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #3f9b4b}
+.opts button:focus-visible,.btn:focus-visible,#snd:focus-visible{outline:3px solid #ff7aa8}
+.opts small{display:block;font-weight:400}
+.btn.alt{background:#fff}
+#fade{position:fixed;inset:0;background:radial-gradient(circle,#fff 10%,#d8f7d4 60%,#a9e8b0);opacity:0;pointer-events:none;transition:opacity .7s;z-index:3;overflow:hidden}
+#fade.on{opacity:1;pointer-events:auto}
+#fade i{position:absolute;font-style:normal;font-size:70px;animation:drift 9s linear infinite}
+@keyframes drift{from{transform:translateX(-120px)}to{transform:translateX(110vw)}}
+#card{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,560px);max-height:88vh;overflow:auto;box-sizing:border-box;background:#fffff6;border:4px solid #58b868;border-radius:26px;padding:18px 20px;z-index:4;display:none}
+#card h2{margin:0;font-size:1.5rem}
+#card .w{margin:0 0 10px;opacity:.75}
+#card pre{font:14px/1.2 Consolas,Menlo,monospace;background:#e9fbe4;border:2px dashed #58b868;border-radius:12px;padding:12px;overflow-x:auto;color:#1f6b3a}
+#card a{color:#1f7a45}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+#start{position:fixed;inset:0;z-index:9;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;background:linear-gradient(#a8ecaa,#e2fbd2);padding:20px}
+#start .e{font-size:90px;animation:hop 1.6s ease-in-out infinite}
+#start h2{margin:0;font-size:2rem}
+@media (prefers-reduced-motion:reduce){#mascot .f,#start .e,#fade i{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="g"></canvas>
+<h1>Planet Travel Explorer</h1>
+<div id="mascot"><div class="f"><svg viewBox="0 0 540 540" role="img" aria-label="Rubah bumi"><defs><g id="ear"><path d="M92,190 C88,120 105,70 135,30 C180,55 220,100 245,155 Z" fill="#42a5f5"/><path d="M92,140 C95,90 112,55 135,30 C160,45 185,72 205,100 C160,85 120,100 92,140 Z" fill="#555a5c"/><path d="M125,72 C152,82 176,112 186,198 L126,198 C116,150 117,105 125,72 Z" fill="#0a6ce0"/></g><g id="cheek"><path d="M15,368 C80,340 165,345 218,402 L232,474 C150,462 60,422 15,368 Z" fill="#ddd"/><path d="M122,386 L184,406 M116,416 L172,434" stroke="#fff" stroke-width="15" stroke-linecap="round" fill="none"/></g></defs><use href="#ear"/><use href="#ear" transform="translate(540,0) scale(-1,1)"/><path d="M85,230 C100,165 180,135 270,135 C360,135 440,165 455,230 C470,300 440,360 400,380 L340,440 L200,440 L140,380 C100,360 75,300 85,230 Z" fill="#42a5f5"/><path d="M240,150 C300,135 380,145 420,190 L492,340 L470,352 C430,332 400,350 352,360 L322,400 C300,422 260,402 240,372 C215,350 175,350 170,320 C175,285 200,270 230,265 C195,255 190,235 205,225 C215,200 230,185 225,170 Z" fill="#a8e800"/><path d="M112,225 C120,208 140,210 152,232 C150,250 135,260 120,252 Z M78,266 L92,258 L95,290 L80,298 Z" fill="#a8e800"/><use href="#cheek"/><use href="#cheek" transform="translate(540,0) scale(-1,1)"/><path d="M205,422 C200,390 335,390 335,422 C340,462 310,497 270,497 C230,497 205,462 205,422 Z" fill="#b3e0f7"/><path d="M232,432 C240,420 300,420 308,432 C310,447 290,466 270,466 C250,466 230,447 232,432 Z" fill="#2b2724"/><path d="M222,468 C232,492 255,492 270,480 C285,492 308,492 318,466" stroke="#444a4f" stroke-width="8" stroke-linecap="round" fill="none"/><ellipse cx="212" cy="303" rx="35" ry="42" transform="rotate(-12 212 303)" fill="#2b2724"/><ellipse cx="337" cy="303" rx="35" ry="42" transform="rotate(12 337 303)" fill="#2b2724"/><ellipse cx="200" cy="286" rx="10" ry="14" fill="#fff"/><ellipse cx="325" cy="286" rx="10" ry="14" fill="#fff"/></svg></div><div id="say">Halo! Pilih benua, yuk!</div></div>
+<button id="snd" aria-label="Suara" title="Suara">🔊</button>
+<div id="panel"><div id="crumbs"></div><div class="opts" id="opts"></div></div>
+<div id="fade"><i style="top:10%;animation-delay:-2s">☁️</i><i style="top:35%;animation-delay:-6s">☁️</i><i style="top:60%;animation-delay:-4s">☁️</i><i style="top:80%;animation-delay:-8s">☁️</i></div>
+<div id="card"><h2 id="cm"></h2><p class="w" id="cw"></p><p id="cd"></p><pre id="ca"></pre><a id="cl" target="_blank" rel="noopener">Lihat foto asli</a>
+<div class="row"><button class="btn" id="again">Terbang lagi ✈️</button><button class="btn alt" id="home">Ke awal 🌍</button></div></div>
+<div id="start"><div class="e">🌍</div><h2>Planet Travel Explorer</h2><p>Putar globe, zoom ke negara, lalu terjun ke kota!<br>Nyalakan suara untuk pengalaman terbaik 🎵</p><button class="btn" id="go">Mulai petualangan</button></div>
+<script>
+const R = String.raw;
+const DATA = [
+{n:"Eropa", c:[
+ {n:"Prancis", k:[
+  ["Paris","Menara Eiffel (Eiffel Tower)","Menara ikonik setinggi 330 meter yang selesai dibangun pada tahun 1889.",R`
+        /\
+        ||
+       /||\
+      / || \
+     /__||__\
+    /  /  \  \
+   /__/____\__\
+`],
+  ["Nice","Promenade des Anglais","Kawasan pejalan kaki tepi pantai yang indah sepanjang Laut Mediterania.",R`
+  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   _____________________
+  /  o   o   o   o   o  \
+ ===========================`],
+  ["Marseille","Basilika Notre-Dame de la Garde","Gereja megah di titik tertinggi kota dengan patung Bunda Maria berlapis emas.",R`
+          (+)
+          _|_
+         /   \
+        |  O  |
+      __|_____|__
+     /   _   _   \
+    |   [ ] [ ]   |
+    |_____________|`]]},
+ {n:"Italia", k:[
+  ["Roma","Koloseum (Colosseum)","Afiteater raksasa peninggalan Kekaisaran Romawi Kuno.",R`
+     ________________________
+    /                        \
+   /   [ ]  [ ]  [ ]  [ ]     \
+  |    [ ]  [ ]  [ ]  [ ]      |
+  |____|_|__|_|__|_|__|_|______|`],
+  ["Pisa","Menara Miring Pisa (Leaning Tower of Pisa)","Menara lonceng katedral yang terkenal karena kemiringannya yang unik.",R`
+            __
+          / / /
+         / / /
+        / / /
+       / / /
+      /_/_/`],
+  ["Venesia","Jembatan Rialto (Rialto Bridge)","Jembatan tertua yang melintasi Grand Canal di Venesia.",R`
+        ______/|______
+       /  ___   ___   \
+   ___/  /   \ /   \   \___
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~`]]},
+ {n:"Inggris", k:[
+  ["London","Big Ben (Elizabeth Tower)","Menara jam raksasa ikonik di Istana Westminster, London.",R`
+          /\
+         /  \
+        | __ |
+        ||()||
+        |____|
+        |    |
+        |____|`],
+  ["Liverpool","Royal Albert Dock","Kawasan pelabuhan bersejarah dan pusat kebudayaan kota Liverpool.",R`
+   __________________
+  |  _   _   _   _   |
+  | [ ] [ ] [ ] [ ]  |
+~~|__________________|~~
+  ~~~~ ~~~~~~~~~~~~ ~~~`],
+  ["Edinburgh","Kastil Edinburgh (Edinburgh Castle)","Kastil bersejarah yang berdiri di atas batu karang gunung berapi purba.",R`
+          |__| |__| |__|
+          |            |
+         /|   _    _   |\
+  |_|_|/__|____________|__\|_|_|
+  |  [ ]      |    |       [ ]  |`]]}]},
+{n:"Amerika", c:[
+ {n:"Amerika Serikat", k:[
+  ["New York","Patung Liberty (Statue of Liberty)","Patung perunggu raksasa simbol kebebasan dan demokrasi dunia.",R`
+         \|/
+         (*)
+          | O
+          \| |\
+           |_| \
+          /   \
+         /_____\
+`],
+  ["San Francisco","Jembatan Golden Gate","Jembatan gantung berwarna merah oranye yang menghubungkan Teluk San Francisco.",R`
+   ||                  ||
+   ||\                /||
+   || \______  ______/ ||
+   ||  \     \/     /  ||
+ ~~||~~~\____/\____/~~~||~~`],
+  ["Washington D.C.","Monumen Washington (Washington Monument)","Tugu obelisk marmer putih tertinggi di dunia untuk mengenang George Washington.",R`
+          /\
+         /  \
+        |    |
+        |    |
+        |    |
+        |    |
+       /______\
+`]]},
+ {n:"Brasil", k:[
+  ["Rio de Janeiro","Patung Kristus Penebus (Christ the Redeemer)","Patung Yesus Kristus raksasa di puncak Gunung Corcovado.",R`
+           |O|
+        __/ | \__
+           \|/
+            |
+           / \
+       ===========`],
+  ["Brasilia","Katedral Brasilia","Katedral berarsitektur modern berbentuk mahkota berduri karya Oscar Niemeyer.",R`
+        \  / \  /
+         \/   \/
+        /  /\   \
+       /  /  \   \
+      /___/___\___\
+`],
+  ["Sao Paulo","MASP (Museu de Arte de São Paulo)","Museum seni terkenal dengan arsitektur unik yang ditopang dua balok merah raksasa.",R`
+     ||=============||
+     ||  [ MASP ]   ||
+     ||=============||
+     ||             ||`]]},
+ {n:"Peru", k:[
+  ["Cusco","Machu Picchu","Situs benteng kuno peninggalan peradaban Suku Inka di pegunungan Andes.",R`
+        /\
+       /  \    __     /\
+     _/____\__|__|___/  \
+    /                    \
+   /______________________\
+`],
+  ["Lima","Plaza Mayor de Lima","Alun-alun utama bersejarah di pusat kota Lima yang dikelilingi bangunan kolonial.",R`
+      [ PLAZA MAYOR ]
+    _____|_|_____|_|_____
+   |  _   _   _   _   _  |
+   | [ ] [ ] [ ] [ ] [ ] |
+   |_____________________|`],
+  ["Arequipa","Basílica Catedral de Arequipa","Katedral batu putih sillar yang indah di kaki Gunung Misti.",R`
+    /\                 /\
+   /  \               /  \
+  |    |_____________|    |
+  |    |  _   _   _  |    |
+  |____|_| | | | | |_|____|`]]}]},
+{n:"Asia", c:[
+ {n:"Indonesia", k:[
+  ["Jakarta","Monas (Monumen Nasional)","Monumen setinggi 132 meter dengan lidah api emas di puncaknya.",R`
+          (S)
+          /|\
+         |   |
+         |   |
+        |     |
+     ___|     |___
+     \  _______  /
+      \_________/`],
+  ["Yogyakarta","Candi Borobudur","Candi Buddha terbesar di dunia peninggalan Dinasti Syailendra.",R`
+              / \
+         ____/___\___
+        /  _   _    _ \
+   _/\_/_______________\_/\_
+  /  _  _  _  _  _   _   _  \
+ /___________________________\
+`],
+  ["Bali","Patung Garuda Wisnu Kencana (GWK)","Patung Dewa Wisnu menunggangi Garuda setinggi 121 meter.",R`
+        _/\_
+       /    \
+     /|  O   |\
+    /_| /|\  |_\
+      | / \  |
+     ===========`]]},
+ {n:"Jepang", k:[
+  ["Tokyo","Tokyo Tower","Menara komunikasi bergaya Menara Eiffel dengan perpaduan warna merah dan putih.",R`
+          ||
+         /  \
+        /    \
+        |=====|
+       |=======|
+      /=========\
+     /====   ====\
+    /_____________\
+`],
+  ["Kyoto","Gerbang Torii Fushimi Inari","Kuil Shinto dengan ribuan gerbang torii berwarna merah oranye.",R`
+   ==================
+    ----------------
+       ||      ||
+       ||      ||
+       ||      ||`],
+  ["Pulau Honshu","Gunung Fuji","Gunung berapi, titik tertinggi di Jepang dengan ketinggian mencapai 3.776 meter.",R`
+          _/\_
+        _/____\_
+       /        \
+     _/          \_
+    /______________\
+`]]},
+ {n:"India", k:[
+  ["Agra","Taj Mahal","Mausoleum marmer putih megah yang termasuk Keajaiban Dunia.",R`
+            ____
+           /    \
+   ( )    (      )    ( )
+   | |  __|______|__  | |
+   | | |  _  ||  _  | | |
+   | | | | | || | | | | |
+   | | |_|_|_||_|_|_| | |`],
+  ["New Delhi","Gerbang India (India Gate)","Monumen peringatan perang setinggi 42 meter untuk menghormati tentara India.",R`
+     ____________________
+    |____________________|
+     |   _   ____   _   |
+     |  | | |    | | |  |
+     |______|____|______|`],
+  ["Mumbai","Gateway of India","Monumen gerbang batu megah di tepi Laut Arab kota Mumbai.",R`
+      |---| |---| |---|
+      |               |
+      |   /_______\   |
+      |  |         |  |
+      |__|_________|__|`]]}]}
+];
+
+// [lat, lon, zoom]
+const GEO = {
+ cont:{Eropa:[50,12,1.5],Amerika:[5,-80,1],Asia:[22,100,1]},
+ ctry:{Prancis:[46.5,2.5,5.5],Italia:[42.5,12.5,5],Inggris:[54,-2.5,5],"Amerika Serikat":[39,-98,2.3],Brasil:[-12,-52,2.4],Peru:[-10,-75,4.5],Indonesia:[-2,115,2.3],Jepang:[36,137,4.5],India:[22,79,3.6]},
+ city:{Paris:[48.86,2.35],Nice:[43.7,7.26],Marseille:[43.3,5.37],Roma:[41.9,12.5],Pisa:[43.72,10.4],Venesia:[45.44,12.33],London:[51.51,-.13],Liverpool:[53.41,-2.99],Edinburgh:[55.95,-3.19],
+  "New York":[40.71,-74],"San Francisco":[37.77,-122.42],"Washington D.C.":[38.89,-77.04],"Rio de Janeiro":[-22.91,-43.17],Brasilia:[-15.79,-47.88],"Sao Paulo":[-23.55,-46.63],
+  Cusco:[-13.52,-71.97],Lima:[-12.05,-77.04],Arequipa:[-16.41,-71.54],Jakarta:[-6.2,106.85],Yogyakarta:[-7.8,110.36],Bali:[-8.81,115.17],
+  Tokyo:[35.68,139.69],Kyoto:[35.01,135.77],"Pulau Honshu":[35.36,138.73],Agra:[27.18,78.02],"New Delhi":[28.61,77.21],Mumbai:[18.92,72.83]}
+};
+
+// Garis pantai sederhana [lon lat, ...]
+const LAND = [
+["#8fdc74","-168 66,-162 70,-156 71.3,-141 69.7,-128 70,-115 68,-108 68.5,-95 68,-90 69,-82 69,-82 66,-87 64,-93 61,-94 58.5,-88 56.5,-82 55,-79 52,-79 57,-77 60,-78 62.5,-72 61,-68 59,-64 60,-61 56,-57 53,-60 50,-66 50,-71 47,-65 48.5,-64 46,-61 45.5,-66 44,-70 43,-70 41.7,-74 40.5,-75.5 38,-76 35,-81 31.5,-80 27,-80.2 25.2,-82 26.5,-82.8 29.5,-85 29.7,-89 30,-90 29,-94 29.5,-97.3 27,-97.5 24,-97.7 21,-96 19,-94.5 18.2,-91 18.8,-90.5 21,-87 21.5,-87.5 18,-88.5 16,-84 15.8,-83.3 14.5,-83.5 11,-81.5 9,-79.5 9.5,-77.4 8.7,-78 7.2,-80 7.4,-81.5 8,-83.5 8.5,-85.7 10,-87.5 13,-92 14.5,-96 15.7,-101 17.2,-105.5 20,-105.5 22.5,-109 26,-112.8 31,-114.7 31.5,-112.2 28,-110 24,-109.8 23,-112 25,-114.5 28.5,-116.5 31.5,-118.5 34,-121 35.5,-122.5 37.5,-124 40.5,-124.2 43,-124 46.5,-124.7 48.3,-123 49,-127 51,-130 54.5,-134 58,-140 59.8,-148 60.5,-152 59,-158 57,-163 54.7,-157 58.8,-162 60,-165 62.5,-161 64.5,-166 64.7"],
+["#8fdc74","-80 73.5,-68 70,-62 66,-66 62.5,-74 64,-78 65,-90 70"],
+["#8fdc74","-118 71,-105 73,-100 70,-110 68.5"],
+["#eaf9e4","-73 78,-60 82,-30 83.5,-20 80,-18 75,-22 70,-30 68,-40 65,-43 60,-49 61,-53 66,-55 70,-60 76"],
+["#6fd98a","-77.4 8.7,-75 11,-72 12,-71 10.5,-68 10.6,-62 10.7,-60 8.5,-57 6,-52 5,-50 1.5,-50 0,-44 -2.5,-38 -4,-35 -5.5,-35 -9,-39 -13,-39 -18,-41 -22,-44 -23.3,-48 -26,-48.5 -28,-52 -32,-55 -35,-57 -35,-58 -38.5,-62 -39,-65 -41,-63.5 -42.5,-65.5 -45,-67.5 -46.5,-66 -48,-69 -51,-68.5 -53,-65.5 -55,-70 -55,-74 -52,-75.5 -47,-74 -42,-73.5 -37,-71.6 -32,-70.5 -25,-70.2 -18.5,-76 -14,-79 -8,-81 -5,-80 -2,-80.5 0.5,-78.8 2,-77.4 4"],
+["#9fe37c","-9 37,-9.5 39,-9 43,-2 43.5,-1.5 46,-4.5 48.5,-1.5 48.7,1.5 50.5,4 51.5,8 53.5,8.5 57,10.5 57.7,10.5 54.8,14 54,19 54.5,21 57,24 57.3,23.5 59.3,30 60,22 60.5,21.5 63,25 65.3,22 65.8,17.5 62.5,19 60,16.5 57,13 55.5,11 59,8 58,5 60,5.5 62,10 64,14 67.5,19 70,26 71,31 70,40 67.5,33 66.5,40 64.5,44 66,44 68.5,54 68.5,60 69,68 69,69 73,80 73,87 75,100 77,113 74,130 71,140 72.5,160 70,170 70,180 68.5,180 65,178 64.5,173 61.5,170 60,164 60,163 57.5,162 55,156 51,156 57,160 61.5,155 59.5,142 59,136 54.5,141 53,140 48,135 43.5,131 42.5,129 41,128 39,129 35.5,126.5 34.5,126 37.5,125 39.5,121.5 39,121 40.5,118 39,119 37,122.5 37,120 35,121.5 32,122 30,121 28,119 25,116 22.5,112 21.5,110 21,108 21.5,106.5 20,105.8 19,108 16,109 12,107 10.5,105 8.7,105 10.5,103 10.8,101 12.5,100 13.5,99.5 10,100.3 7.2,103.4 4.5,104.2 1.5,103.4 1.3,101 3,100.3 5.5,98.5 8,98.3 12,97.5 16.5,94.5 16,94 19,92 21,90.5 22,87 21.5,85 19.5,82 16.5,80 15,80 10.5,78 8.5,76.5 9,75 12.5,73 17,72.8 20,70 21,69 22.5,67 24.8,62 25,57 25.5,56.5 27,54 26.5,51 28,48.5 30,48 29.5,50 26.5,50.5 25,51.5 24.2,54 24,56 26,56.5 24.5,58.5 23.5,59.5 22.5,58 20.5,55 17,52 16,47 13,43.5 12.7,42.5 15,39 21.5,35.5 27.5,34.5 28,35 29.5,34.8 31.5,35 33.5,36 35.5,36 36.8,32 36.2,30 36.5,27.5 37,26.5 39.5,26 40.3,29 41,31 41.2,35 42,38 41,41.5 41.5,41.5 42.5,38 44.5,37 45.3,35 45,33 44.5,32 46,30.5 46.5,29 44.8,28 43.3,28 41.8,26 40.8,23 40,24 38,23 36.5,21.5 37,21 39,19.5 40.3,19.5 42,16 43.5,14 45,13.5 45.7,12.3 45.3,12.5 44,16 41.8,18.5 40.2,16.5 38,15.8 38,16.5 39.5,15.5 40.2,13 41.3,10.5 43,8.8 44.4,6 43.1,3.2 43.2,3 41.8,0.5 40.5,-0.5 38.5,-2 36.8,-5.5 36,-6.3 36.8"],
+["#9fe37c","-180 68.5,-175 67.5,-170 66,-172 64.5,-178 64.5,-180 65"],
+["#b9e56e","-17 21,-16 24,-13 27.5,-10 29.5,-9.7 31.5,-6.8 34,-5.5 35.8,-2 35.1,3 36.8,10 37.3,11 35.5,10 34,11.5 33,15 32.3,20 32,20 30.8,24 32,29 31,34 31.2,32.5 30,33.5 28,35 24,37 21,38.5 18,39.5 15.5,43 12.5,43.5 11.5,51 12,51 10.5,48 8,44 1,41 -2,39 -5,39.3 -7,40.5 -11,40.5 -15,36 -18.5,35 -21,35.5 -24,33 -25.8,32.8 -28.5,30 -31.5,27.5 -33.3,25 -34,22 -34.2,20 -34.8,18.4 -34.1,18 -32,16.5 -28.5,15 -26.5,14.5 -22.5,11.7 -17.2,13.5 -12.5,12.3 -6,9 -1,9.5 3.5,8.5 4.5,6 4.3,4 6.3,1 6,-2 4.8,-5 5.2,-7.5 4.4,-10.5 6.5,-13 8.5,-15 11,-16.8 13.5,-17.5 14.8,-16.5 19"],
+["#b9e56e","49.3 -12,50.5 -15.5,49.5 -18,47.5 -24.5,45 -25.5,43.5 -23,44.5 -19,44 -16.5,47 -15"],
+["#a8e68a","113.5 -22,114 -26,115 -34,118 -35,123 -34,126 -32.2,131 -31.5,135 -34.8,137.5 -33,138 -35.5,140 -37.8,144 -38.3,146.3 -39,150 -37.5,151.2 -33.9,153 -30,153.5 -27.5,150 -22.5,146.5 -19,145.4 -15,143.5 -14,142.5 -10.8,141.5 -13.5,141.7 -16.5,139.5 -17.5,136 -15.3,137 -12.2,135 -12,132 -11.3,130 -12.5,129.5 -15,127 -14.2,125 -15,122.2 -17.5,120 -20,116.5 -20.7"],
+["#a8e68a","144.7 -40.7,148.3 -40.9,148 -43,146 -43.6"],
+["#a8e68a","172.7 -34.5,175.5 -37,178.5 -37.7,176 -39.5,175 -41.5,173.8 -39.2,174.5 -37.5"],
+["#a8e68a","172.7 -40.5,174.3 -41.7,172.7 -43.5,170.5 -46,166.5 -46,168.5 -44,171.5 -41.5"],
+["#9fe37c","130.8 31,131.5 33,132 34,135 33.5,136.5 34.2,138.8 34.6,140 35,140.8 36,141 38,142 39.5,141.5 41,140.3 41,139.7 39.8,139 38,137 37,136 36,133 35.5,131 34.5,130 33.5,130.2 32"],
+["#9fe37c","140 42,141.5 42.5,143.5 42,145.5 43.3,142 45.5,141.5 44.5,140 43.5"],
+["#9fe37c","-5.5 50,-3 50.6,1.4 51.2,1.7 52.8,0.3 53.5,-0.2 54.5,-1.5 55.5,-2 56,-2.2 57.6,-3.5 58.6,-5 58.6,-6 57,-5.5 56,-5 55,-3 54.8,-3.2 53.4,-4.5 53.3,-4.2 52.5,-5 51.7,-3 51.4,-4.5 51"],
+["#9fe37c","-6 52,-6 54,-8 55.2,-10 54,-10 52,-8 51.6"],
+["#9fe37c","-24 65.5,-22 66.4,-16 66.5,-14 65,-18 63.5,-22 63.8"],
+["#8fe08a","95.3 5.6,98 4,100.5 2,104 -1,106 -3,105.8 -5.8,104 -5.5,102 -4,100.5 -2,98.5 0.5,96 3"],
+["#8fe08a","105.2 -6.8,106.5 -6,108.5 -6.8,110.5 -6.9,112.6 -6.9,114.4 -7.8,114.5 -8.7,111 -8.3,108 -7.8,106 -7.1"],
+["#8fe08a","114.4 -8.1,115.7 -8.1,115.7 -8.8,114.9 -8.8"],
+["#8fe08a","116 -8.3,119 -8.5,122 -8.6,125 -9,127 -8.6,124 -10.3,120 -10,117 -9"],
+["#8fe08a","109 1.5,111 1.8,113 3,115 5,117 7,119 5,118 2,117.5 0.5,116 -2,116 -4,114 -4,111 -3,110 -1.5,109 0"],
+["#8fe08a","119 0.5,121 1.5,125 1.5,123 0.5,121.5 0.3,123 -1,121.5 -1.5,123 -4,121.5 -4.8,120.4 -5.5,119.5 -4,119 -3,120 -1.5"],
+["#8fe08a","131 -0.8,134 -0.8,138 -1.5,141 -2.6,145 -4.5,147.5 -6,147.8 -8,150.5 -10.5,147 -10,143.5 -9,141 -9.1,138 -8.3,137.5 -5,135 -4,133 -4,131 -1.5"],
+["#f3fff0","-180 -78,-150 -77,-120 -74,-100 -72,-75 -73,-60 -64.5,-45 -70,-30 -72,0 -70,30 -69,60 -67,90 -66,120 -66,150 -69,170 -72,180 -78,180 -90,-180 -90"]
+].map(([c,s])=>[c,s.split(",").map(p=>p.trim().split(" ").map(Number))]);
+const LAKE = ["47 45,50 46.5,53 45.5,53 42,53.5 40,54 37,51 36.7,49 37.5,49 40,47.5 42.5"].map(s=>s.split(",").map(p=>p.trim().split(" ").map(Number)));
+
+// ---------- Musik & efek suara (WebAudio, tanpa file) ----------
+let AC, master, muted=false, stp=0;
+const MID=m=>440*Math.pow(2,(m-69)/12);
+const CH=[[60,64,67,72],[57,60,64,69],[53,57,60,65],[55,59,62,67]];
+function note(m,t,d,type,v){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=MID(m);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(master);o.start(t);o.stop(t+d+.05);}
+function tick(){if(!AC||AC.state!=="running")return;const t=AC.currentTime+.05,c=CH[Math.floor(stp/8)%4],p=[0,1,2,3,2,1,3,2];note(c[p[stp%8]]+(stp%16>=8?12:0),t,.55,"triangle",.22);if(stp%8===0)note(c[0]-24,t,2,"sine",.32);stp++;}
+function startAudio(){if(AC){AC.resume();return;}AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=.95;master.connect(AC.destination);setInterval(tick,300);}
+function sfx(f1,f2,d){if(!AC||muted)return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type="sine";o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(.4,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(master);o.start(t);o.stop(t+d);}
+document.getElementById("snd").onclick=()=>{muted=!muted;if(master)master.gain.value=muted?0:.95;document.getElementById("snd").textContent=muted?"🔇":"🔊";};
+
+// ---------- Globe ----------
+const $=id=>document.getElementById(id), cv=$("g"), cx=cv.getContext("2d"), D=Math.PI/180;
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+let W,H,DPR,cam={lon:100,lat:20,k:.95},tw=null,st={lvl:0,c:null,n:null},busy=false,pins=[];
+function size(){DPR=devicePixelRatio||1;W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;}
+addEventListener("resize",size);size();
+const geom=()=>({R:Math.min(W*.46,H*.34)*cam.k,x:W/2,y:H*.4});
+function pj(lo,la){const l=(lo-cam.lon)*D,p=la*D,p0=cam.lat*D;return[Math.cos(p)*Math.sin(l),Math.cos(p0)*Math.sin(p)-Math.sin(p0)*Math.cos(p)*Math.cos(l),Math.sin(p0)*Math.sin(p)+Math.cos(p0)*Math.cos(p)*Math.cos(l)];}
+function path(pts,g){let any=false;cx.beginPath();pts.forEach(([lo,la],i)=>{let[x,y,c]=pj(lo,la);if(c>0)any=true;else{const m=Math.hypot(x,y)||1;x/=m;y/=m;}i?cx.lineTo(g.x+g.R*x,g.y-g.R*y):cx.moveTo(g.x+g.R*x,g.y-g.R*y);});cx.closePath();return any;}
+const CL=[...Array(6)].map((_,i)=>({x:i*180,y:30+Math.random()*260,s:.6+Math.random()*.8,v:.15+Math.random()*.2}));
+function draw(ts){
+ cx.setTransform(DPR,0,0,DPR,0,0);cx.clearRect(0,0,W,H);
+ CL.forEach(c=>{c.x=(c.x+c.v)%(W+200);cx.fillStyle="rgba(255,255,255,.8)";const s=c.s*22,x=c.x-100;[[0,0,1],[1,-.5,1.3],[2,0,1]].forEach(([a,b,r])=>{cx.beginPath();cx.arc(x+a*s,c.y+b*s,s*r,0,7);cx.fill();});});
+ const g=geom();
+ let gr=cx.createRadialGradient(g.x,g.y,g.R*.95,g.x,g.y,g.R*1.12);gr.addColorStop(0,"rgba(255,255,255,.8)");gr.addColorStop(1,"rgba(255,255,255,0)");
+ cx.fillStyle=gr;cx.beginPath();cx.arc(g.x,g.y,g.R*1.12,0,7);cx.fill();
+ cx.save();cx.beginPath();cx.arc(g.x,g.y,g.R,0,7);cx.clip();
+ gr=cx.createRadialGradient(g.x-g.R*.35,g.y-g.R*.4,g.R*.1,g.x,g.y,g.R);gr.addColorStop(0,"#d4f7ea");gr.addColorStop(1,"#5cc9b3");
+ cx.fillStyle=gr;cx.fillRect(0,0,W,H);
+ cx.strokeStyle="rgba(255,255,255,.4)";cx.lineWidth=1;
+ const line=pts=>{cx.beginPath();let on=false;pts.forEach(([lo,la])=>{const[x,y,c]=pj(lo,la);if(c>0){on?cx.lineTo(g.x+g.R*x,g.y-g.R*y):cx.moveTo(g.x+g.R*x,g.y-g.R*y);on=true;}else on=false;});cx.stroke();};
+ for(let lo=-180;lo<180;lo+=30){const a=[];for(let la=-90;la<=90;la+=5)a.push([lo,la]);line(a);}
+ for(let la=-60;la<=60;la+=30){const a=[];for(let lo=-180;lo<=180;lo+=5)a.push([lo,la]);line(a);}
+ cx.lineJoin="round";cx.lineWidth=Math.max(1.5,g.R/160);cx.strokeStyle="#3f9b4b";
+ LAND.forEach(([col,pts])=>{if(path(pts,g)){cx.fillStyle=col;cx.fill();cx.stroke();}});
+ LAKE.forEach(pts=>{if(path(pts,g)){cx.fillStyle="#7ed6c1";cx.fill();}});
+ gr=cx.createRadialGradient(g.x-g.R*.3,g.y-g.R*.35,g.R*.5,g.x,g.y,g.R);gr.addColorStop(0,"rgba(255,255,255,0)");gr.addColorStop(1,"rgba(10,90,60,.35)");
+ cx.fillStyle=gr;cx.fillRect(0,0,W,H);cx.restore();
+ cx.beginPath();cx.arc(g.x,g.y,g.R,0,7);cx.strokeStyle="#3f9b4b";cx.lineWidth=4;cx.stroke();
+ // pin
+ cx.font="700 14px 'Trebuchet MS',sans-serif";cx.textAlign="center";
+ pins.forEach((p,i)=>{const[x,y,c]=pj(p.lon,p.lat);if(c<.15)return;const px=g.x+g.R*x,py=g.y-g.R*y,b=RM?0:Math.abs(Math.sin(ts/350+i))*7;
+  cx.fillStyle="rgba(0,60,30,.25)";cx.beginPath();cx.ellipse(px,py,7,3,0,0,7);cx.fill();
+  cx.fillStyle="#ff7aa8";cx.strokeStyle="#fff";cx.lineWidth=3;cx.beginPath();cx.arc(px,py-12-b,9,0,7);cx.fill();cx.stroke();
+  cx.fillStyle="#fff";cx.beginPath();cx.arc(px-3,py-15-b,2.5,0,7);cx.fill();
+  const ty=i%2?py+22:py-32-b,w=cx.measureText(p.name).width+14;
+  cx.fillStyle="#fff";cx.strokeStyle="#58b868";cx.lineWidth=2;cx.beginPath();cx.roundRect(px-w/2,ty-15,w,22,11);cx.fill();cx.stroke();
+  cx.fillStyle="#14502b";cx.fillText(p.name,px,ty);});
+}
+function fly(to,dur,cb){busy=true;const f={...cam};tw={f,dl:((to.lon-f.lon+540)%360)-180,to,t0:performance.now(),dur:RM?1:dur,cb};}
+function loop(ts){
+ if(tw){const t=Math.min(1,(ts-tw.t0)/tw.dur),e=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+  cam.lon=tw.f.lon+tw.dl*e;cam.lat=tw.f.lat+(tw.to.lat-tw.f.lat)*e;cam.k=tw.f.k*Math.pow(tw.to.k/tw.f.k,e);
+  if(t>=1){const c=tw.cb;tw=null;busy=false;c&&c();}}
+ else if(st.lvl===0&&!RM&&$("start").style.display==="none")cam.lon+=.1;
+ draw(ts);requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ---------- Alur ----------
+const say=t=>$("say").textContent=t;
+const EM={Eropa:"🏰",Amerika:"🗽",Asia:"🏯"};
+function mk(label,small,fn){const b=document.createElement("button");b.append(label);if(small){const s=document.createElement("small");s.textContent=small;b.append(s);}b.onclick=()=>{if(busy)return;sfx(520,880,.15);fn();};return b;}
+function menu(){
+ const o=$("opts"),cr=$("crumbs");o.replaceChildren();cr.replaceChildren();
+ const crumb=(t,fn)=>{const b=document.createElement("button");b.textContent=t;b.onclick=()=>{if(!busy)fn();};cr.append(b);};
+ if(st.lvl>0)crumb("🌍 Dunia",goHome);
+ if(st.lvl>1)crumb(DATA[st.c].n,()=>goCont(st.c));
+ if(st.lvl===0){pins=DATA.map((b,i)=>({name:b.n,lon:GEO.cont[b.n][1],lat:GEO.cont[b.n][0]}));
+  DATA.forEach((b,i)=>o.append(mk(EM[b.n]+" "+b.n,b.c.length+" negara",()=>goCont(i))));say("Halo! Pilih benua, yuk!");}
+ if(st.lvl===1){const b=DATA[st.c];pins=b.c.map(c=>({name:c.n,lon:GEO.ctry[c.n][1],lat:GEO.ctry[c.n][0]}));
+  b.c.forEach((c,i)=>o.append(mk("📍 "+c.n,c.k.length+" kota",()=>goCtry(st.c,i))));say("Mau ke negara mana?");}
+ if(st.lvl===2){const c=DATA[st.c].c[st.n];pins=c.k.map(k=>({name:k[0],lon:GEO.city[k[0]][1],lat:GEO.city[k[0]][0]}));
+  c.k.forEach((k,i)=>o.append(mk("🏙️ "+k[0],k[1],()=>dive(st.c,st.n,i))));say("Pilih kota, lalu kita terjun!");}
+}
+function goHome(){st={lvl:0};menu();fly({lat:20,lon:cam.lon,k:.95},1400);}
+function goCont(i){st={lvl:1,c:i};menu();const g=GEO.cont[DATA[i].n];fly({lat:g[0],lon:g[1],k:g[2]},1800);}
+function goCtry(i,n){st={lvl:2,c:i,n};menu();const g=GEO.ctry[DATA[i].c[n].n];fly({lat:g[0],lon:g[1],k:g[2]},2000);}
+function dive(i,n,j){
+ const k=DATA[i].c[n].k[j],g=GEO.city[k[0]];busy=true;pins=[{name:k[0],lon:g[1],lat:g[0]}];
+ $("panel").classList.add("hide");say("Wuuusss! Terjun ke "+k[0]+"!");sfx(900,120,1.6);
+ fly({lat:g[0],lon:g[1],k:22},2800,()=>{$("fade").classList.add("on");setTimeout(()=>{
+  $("cm").textContent=k[1];$("cw").textContent=k[0]+", "+DATA[i].c[n].n;$("cd").textContent=k[2];$("ca").textContent=k[3].replace(/^\n/,"");
+  $("cl").href="https://www.google.com/search?tbm=isch&q="+encodeURIComponent(k[1]+" "+k[0]);
+  $("card").style.display="block";sfx(660,1320,.4);},700);});
+}
+function back(){$("card").style.display="none";$("fade").classList.remove("on");$("panel").classList.remove("hide");}
+$("again").onclick=()=>{back();const g=GEO.ctry[DATA[st.c].c[st.n].n];cam={lat:g[0],lon:g[1],k:g[2]};menu();};
+$("home").onclick=()=>{back();st={lvl:0};cam.k=.95;cam.lat=20;menu();};
+$("go").onclick=()=>{startAudio();$("start").style.display="none";};
+menu();
+</script>
+</body>
+</html>
